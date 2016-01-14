@@ -4,7 +4,7 @@
 
 .. code:: python
 
-    >>> class MyType(object):
+        >>> class MyType(object):
         ...     __repr__ = lambda self: "instance"
         ...
         >>> UserSchema = schema_factory(
