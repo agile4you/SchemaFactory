@@ -83,7 +83,7 @@ class SchemaNode(object):
         Returns:
             The cached value for the class instance or None.
         """
-        if not instance and owner:
+        if not instance and owner:  # pragma: no cover
             return self
 
         return self._cache.get(instance)
@@ -123,7 +123,7 @@ class SchemaNode(object):
                     for item in value]) and\
             isinstance(value, self._valid_types)
 
-    def __repr__(self):
+    def __repr__(self):  # pragma: no cover
         return "<{} instance at: 0x{:x}>".format(self.__class__, id(self))
 
     def __str__(self):
@@ -168,7 +168,7 @@ def schema_factory(schema_name, **schema_nodes):
         >>> bad_user_attr_2 = UserSchema(pk=34, name='Bill', model=MyType())
         Traceback (most recent call last):
             ...
-        node.SchemaError: Invalid Attributes UserSchema for {'pk'}.
+        __init__.SchemaError: Invalid Attributes UserSchema for {'pk'}.
         >>> bad_user_val = UserSchema(id='34', name='Bill', model=MyType())
         Traceback (most recent call last):
             ...
