@@ -4,6 +4,9 @@
 .. image:: https://travis-ci.org/agile4you/SchemaFactory.svg?branch=master
     :target: https://travis-ci.org/agile4you/SchemaFactory
 
+.. image:: https://coveralls.io/repos/github/agile4you/SchemaFactory/badge.svg?branch=master
+    :target: https://coveralls.io/github/agile4you/SchemaFactory?branch=master
+
 
 *Example Usage*
 
