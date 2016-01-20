@@ -163,6 +163,15 @@ def schema_factory(schema_name, **schema_nodes):
 
     schema_nodes['_schema_nodes'] = sorted(schema_nodes.keys())
 
+    def cls_repr(self):
+        return "<{} instance at: 0x{:x}>".format(self.__class__, id(self))
+
+    def cls_str(self):
+        return "<{} instance, attributes:{}>".format(
+            self.__class__.__name__,
+            self._schema_nodes
+        )
+
     def cls_init(self, **kwargs):
         if not set(kwargs).issubset(set(self._schema_nodes)):
             raise SchemaError('Invalid Attributes {} for {}.'.format(
@@ -178,5 +187,7 @@ def schema_factory(schema_name, **schema_nodes):
 
     schema_nodes['to_dict'] = property(to_dict)
     schema_nodes['__init__'] = cls_init
+    schema_nodes['__repr__'] = cls_repr
+    schema_nodes['__str__'] = cls_str
 
     return type('{}Schema'.format(schema_name.title()), (), schema_nodes)

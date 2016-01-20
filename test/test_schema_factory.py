@@ -7,6 +7,14 @@ from schema_factory import SchemaError
 from collections import OrderedDict
 
 
+def test_schema_str(mock_schema):
+    """Testing schema `__str__` method.
+    """
+    cls_repr = "<TestSchema instance, attributes:['name', 'number', 'scores']>"
+
+    assert str(mock_schema()) == cls_repr
+
+
 def test_valid_schema_pass(mock_schema):
     """Testing valid schema pass.
     """
@@ -59,7 +67,7 @@ def test_schema_attr_validator_fail(mock_schema, mock_validator):
         assert mock_schema(**schema_data)
 
 
-def test_schema_attr_validator_pass(mock_schema, mock_validator):
+def test_schema_attr_validator_pass(mock_schema):
     """Testing schema validation pass for attribute value.
     """
 
