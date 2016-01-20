@@ -1,5 +1,10 @@
 **SchemaFactory**:  *python schema made easy...*
 
+
+.. image:: https://travis-ci.org/agile4you/SchemaFactory.svg?branch=master
+    :target: https://travis-ci.org/agile4you/SchemaFactory
+
+
 *Example Usage*
 
 .. code:: python
