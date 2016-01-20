@@ -23,6 +23,6 @@ Provides schema factory utilities.
 __all__ = ['SchemaNode', 'schema_factory', 'SchemaError']
 __authors__ = 'Papavassiliou Vassilis'
 __date__ = '2016-1-14'
-__version__ = '1.0'
+__version__ = '1.1'
 
 from schema_factory.schema_factory import *
