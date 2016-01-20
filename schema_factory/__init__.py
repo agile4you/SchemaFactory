@@ -19,6 +19,8 @@
 
 Provides schema factory utilities.
 """
+from __future__ import absolute_import
+
 
 __all__ = ['SchemaNode', 'schema_factory', 'SchemaError']
 __authors__ = 'Papavassiliou Vassilis'
