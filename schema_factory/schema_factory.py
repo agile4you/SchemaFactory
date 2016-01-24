@@ -193,4 +193,4 @@ def schema_factory(schema_name, **schema_nodes):
     schema_nodes['__repr__'] = cls_repr
     schema_nodes['__str__'] = cls_str
 
-    return type('{}Schema'.format(schema_name.title()), (), schema_nodes)
+    return type('Schema'.format(schema_name.title()), (), schema_nodes)
