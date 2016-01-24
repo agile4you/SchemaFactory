@@ -6,10 +6,9 @@ Provides schema factory utilities.
 
 from __future__ import absolute_import
 
-__all__ = ['SchemaNode', 'schema_factory', 'SchemaError']
+__all__ = ['SchemaNode', 'schema_factory', 'SchemaError', 'Schema']
 __authors__ = 'Papavassiliou Vassilis'
 __date__ = '2016-1-14'
-
 
 
 from schema_factory import __version__
@@ -25,6 +24,16 @@ class SchemaError(Exception):
     """Raises when a Schema error occurs.
     """
     pass
+
+
+class SchemaType(type):
+    """Base Type for Schema classes.
+    """
+    def __instancecheck__(self, instance):
+        return 'Schema' in instance.__class__.__name__
+
+
+Schema = SchemaType('Schema', (), {})
 
 
 class SchemaNode(object):
@@ -148,6 +157,8 @@ def schema_factory(schema_name, **schema_nodes):
         ... )
         ...
         >>> user = UserSchema(id=34, name='Bill', model=MyType())
+        >>> isinstance(user, Schema)
+        True
         >>> print(user.to_dict)
         OrderedDict([('id', 34), ('model', instance), ('name', 'Bill')])
         >>> bad_user_attr_1 = UserSchema(id=-1, name='Bill', model=MyType())
