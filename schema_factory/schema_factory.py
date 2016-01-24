@@ -171,7 +171,7 @@ def schema_factory(schema_name, **schema_nodes):
 
     def cls_str(self):
         return "<{} instance, attributes:{}>".format(
-            self.__class__.__name__,
+            schema_name.title() + self.__class__.__name__,
             self._schema_nodes
         )
 
