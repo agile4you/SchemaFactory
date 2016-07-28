@@ -6,13 +6,15 @@ Provides schema factory utilities.
 
 from __future__ import absolute_import
 
-__all__ = ['SchemaNode', 'schema_factory', 'SchemaError', 'Schema']
+__all__ = ['SchemaNode', 'schema_factory', 'SchemaError', 'SchemaType']
 __authors__ = 'Papavassiliou Vassilis'
 __date__ = '2016-1-14'
+__version__ = '1.1'
 
 
-from schema_factory import __version__
 from collections import OrderedDict
+import ujson
+from datetime import datetime
 import six
 import weakref
 
@@ -26,14 +28,167 @@ class SchemaError(Exception):
     pass
 
 
-class SchemaType(type):
+class _SchemaType(type):
     """Base Type for Schema classes.
     """
     def __instancecheck__(self, instance):
         return 'Schema' in instance.__class__.__name__
 
 
-Schema = SchemaType('Schema', (), {})
+SchemaType = _SchemaType('Schema', (), {})
+
+
+class NodeType(object):
+    """Base SchemaNode Type placeHolder.
+    """
+
+    base_type = None
+
+    cast_callback = None
+
+    @property
+    def cast(self):
+        """Cast a string interface into NodeType.base_type object.
+        """
+        if self.cast_callback:
+            return self.cast_callback
+        return self.base_type
+
+    def validate(self, value):
+        """Base validation method. Check if type is valid, or try brute casting.
+
+        Args:
+            value (object): A value for validation.
+
+        Returns:
+            Base_type instance.
+
+        Raises:
+            SchemaError, if validation or type casting fails.
+        """
+
+        cast_callback = self.cast
+
+        try:
+            return value if isinstance(value, self.base_type) else cast_callback(value)
+
+        except Exception:
+            raise SchemaError('Invalid value {} for {}.'.format(value, self.base_type))
+
+    def __repr__(self):  # pragma: no cover
+        return '<{} instance at: 0x{:x}>'.format(self.__class__, id(self))
+
+    def __str__(self): # pragma: no cover
+        return '{}(<{}>)'.format(self.__class__.__name__, self.base_type)
+
+    __call__ = validate
+
+
+class IntegerType(NodeType):
+    """Integer NodeType.
+
+    >>> int_validator = IntegerType()
+    >>> print(int_validator(34))
+    34
+    >>> print(int_validator('123'))
+    123
+    >>> print(int_validator('123c'))
+    Traceback (most recent call last):
+        ...
+    schema_factory.SchemaError: Invalid value 123c for <class 'int'>.
+    """
+
+    base_type = int
+
+
+class FloatType(NodeType):
+    """Float NodeType.
+
+    >>> float_validator = FloatType()
+    >>> print(float_validator(34))
+    34.0
+    >>> print(float_validator('123.009'))
+    123.009
+    >>> print(float_validator('123c'))
+    Traceback (most recent call last):
+        ...
+    schema_factory.SchemaError: Invalid value 123c for <class 'float'>.
+    """
+
+    base_type = float
+
+
+class StringType(NodeType):
+    """String NodeType.
+
+    >>> str_validator = StringType()
+    >>> print(str_validator(34))
+    34
+    >>> print(str_validator(False))
+    False
+    """
+
+    base_type = str
+
+
+class BooleanType(NodeType):
+    """Boolean NodeType.
+
+    >>> boolean_validator = BooleanType()
+    >>> boolean_validator(True)
+    True
+    >>> boolean_validator('FALSE')
+    False
+    >>> boolean_validator('TrUe')
+    True
+    """
+
+    base_type = bool
+
+    cast_callback = lambda _, value: ujson.loads(value.lower())
+
+
+class DatetimeType(NodeType):
+    """Datetime NodeType.
+
+    >>> datetime_validator = DatetimeType()
+    >>> print(datetime_validator('2016-01-28 15:30:26.979879+01'))
+    2016-01-28 15:30:26
+    >>> print(datetime_validator('2016-01-28 15:30:26.979879'))
+    2016-01-28 15:30:26
+    """
+
+    base_type = datetime
+
+    cast_callback = lambda _, value: datetime.strptime(value.split('.')[0], '%Y-%m-%d %H:%M:%S')
+
+
+class MappingType(NodeType):
+    """Mapping NodeType
+
+    >>> mapping_validator = MappingType()
+    >>> print(mapping_validator({'a': 1}))
+    {'a': 1}
+    >>> print(mapping_validator('{"b": 2}'))
+    {'b': 2}
+    """
+    base_type = dict
+
+    cast_callback = lambda _, value: ujson.loads(value)
+
+    def __init__(self, item_type=None):
+        self.item_type = item_type
+
+
+class ArrayType(NodeType):
+    """Array NodeType.
+    """
+
+    def __init__(self, item_type=None):
+        self.base_type = item_type
+
+    def validate(self, value):
+        pass
 
 
 class SchemaNode(object):
@@ -61,11 +216,11 @@ class SchemaNode(object):
 
     array_types = {list, tuple}
 
-    def __init__(self, alias, valid_type, array_type=None, validators=None,
-                 default=None):
+    def __init__(self, alias, valid_type, array_type=None, validators=None, default=None):
         self._cache = weakref.WeakKeyDictionary()
         self.validators = validators or []
         self._valid_types = self._type_mapper.get(valid_type) or (valid_type, )
+        self._force_type = valid_type
         self.is_array = set(self._valid_types).issubset(self.array_types)
         self.array_type = self._type_mapper[array_type]
         self.alias = alias
@@ -121,6 +276,12 @@ class SchemaNode(object):
                     for item in value]) and\
             isinstance(value, self._valid_types)
 
+    def brute_validate(self, value):
+        try:
+            return self._force_type(value)
+        except Exception:
+            raise AttributeError('Cannot cast {} to {}.'.format((value, ), self._force_type))
+
     def __repr__(self):  # pragma: no cover
         return "<{} instance at: 0x{:x}>".format(self.__class__, id(self))
 
@@ -147,6 +308,8 @@ def schema_factory(schema_name, **schema_nodes):
 
     Examples:
         >>> class MyType(object):
+        ...     def __init__(self, *args, **kwargs):
+        ...         self.data = kwargs
         ...     __repr__ = lambda self: "instance"
         ...
         >>> UserSchema = schema_factory(
@@ -157,7 +320,7 @@ def schema_factory(schema_name, **schema_nodes):
         ... )
         ...
         >>> user = UserSchema(id=34, name='Bill', model=MyType())
-        >>> isinstance(user, Schema)
+        >>> isinstance(user, SchemaType)
         True
         >>> print(user.to_dict)
         OrderedDict([('id', 34), ('model', instance), ('name', 'Bill')])
@@ -168,11 +331,16 @@ def schema_factory(schema_name, **schema_nodes):
         >>> bad_user_attr_2 = UserSchema(pk=34, name='Bill', model=MyType())
         Traceback (most recent call last):
             ...
-        __init__.SchemaError: Invalid Attributes UserSchema for {'pk'}.
+        schema_factory.SchemaError: Invalid Attributes UserSchema for {'pk'}.
         >>> bad_user_val = UserSchema(id='34', name='Bill', model=MyType())
         Traceback (most recent call last):
             ...
         AttributeError: Invalid value ('34',) for <SchemaNode(types: (<class 'int'>,))>.
+        >>> print(type(user))
+        <class 'schema_factory.UserSchema'>
+        >>> user2 = UserSchema.brute_validate(id='43', name='Bill', model={'a': 1, 'b': 2})
+        >>> print(user2.to_dict)
+        OrderedDict([('id', 43), ('model', instance), ('name', 'Bill')])
     """
 
     schema_nodes['_schema_nodes'] = sorted(schema_nodes.keys())
@@ -185,6 +353,17 @@ def schema_factory(schema_name, **schema_nodes):
             self.__class__.__name__,
             self._schema_nodes
         )
+
+    def brute_validate(cls, **kwargs):
+        if not set(kwargs).issubset(set(cls._schema_nodes)):
+            raise SchemaError('Invalid Attributes {} for {}.'.format(
+                cls.__name__,
+                set(kwargs).difference(set(cls._schema_nodes))
+            ))
+
+        cls_kwargs = {key: getattr(cls, key).brute_validate(value) for key, value in kwargs.items()}
+
+        return cls(**cls_kwargs)
 
     def cls_init(self, **kwargs):
         if not set(kwargs).issubset(set(self._schema_nodes)):
@@ -203,5 +382,6 @@ def schema_factory(schema_name, **schema_nodes):
     schema_nodes['__init__'] = cls_init
     schema_nodes['__repr__'] = cls_repr
     schema_nodes['__str__'] = cls_str
+    schema_nodes['brute_validate'] = classmethod(brute_validate)
 
     return type('{}Schema'.format(schema_name.title()), (), schema_nodes)

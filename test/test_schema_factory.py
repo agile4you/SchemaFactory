@@ -3,7 +3,7 @@
 """
 
 import pytest
-from schema_factory import SchemaError
+from schema_factory import SchemaError, SchemaType
 from collections import OrderedDict
 
 
@@ -13,6 +13,13 @@ def test_schema_str(mock_schema):
     cls_repr = "<TestSchema instance, attributes:['name', 'number', 'scores']>"
 
     assert str(mock_schema()) == cls_repr
+
+
+def test_schema_reflection(mock_schema):
+    """Testing __isinstance__ hook.
+    """
+
+    assert isinstance(mock_schema(), SchemaType)
 
 
 def test_valid_schema_pass(mock_schema):

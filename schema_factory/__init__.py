@@ -22,7 +22,7 @@ Provides schema factory utilities.
 from __future__ import absolute_import
 
 
-__all__ = ['SchemaNode', 'schema_factory', 'SchemaError', 'Schema']
+__all__ = ['SchemaNode', 'schema_factory', 'SchemaError', 'SchemaType']
 __authors__ = 'Papavassiliou Vassilis'
 __date__ = '2016-1-14'
 __version__ = '1.1'
