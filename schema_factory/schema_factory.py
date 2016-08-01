@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`schema_factory.` module.
+"""`schema_factory.schema_factory` module.
 
 Provides schema factory utilities.
 """
@@ -8,8 +8,8 @@ from __future__ import absolute_import
 
 __all__ = ['SchemaNode', 'schema_factory', 'SchemaError', 'SchemaType']
 __authors__ = 'Papavassiliou Vassilis'
-__date__ = '2016-1-14'
-__version__ = '1.1'
+__date__ = '2016-8-1'
+__version__ = '1.2'
 
 
 from collections import OrderedDict
@@ -47,12 +47,16 @@ class NodeType(object):
     cast_callback = None
 
     @property
+    def class_type(self):
+        return self._class_type if hasattr(self, '_class_type') else self.base_type
+
+    @property
     def cast(self):
         """Cast a string interface into NodeType.base_type object.
         """
         if self.cast_callback:
             return self.cast_callback
-        return self.base_type
+        return self.class_type
 
     def validate(self, value):
         """Base validation method. Check if type is valid, or try brute casting.
@@ -70,10 +74,10 @@ class NodeType(object):
         cast_callback = self.cast
 
         try:
-            return value if isinstance(value, self.base_type) else cast_callback(value)
+            return value if isinstance(value, self.class_type) else cast_callback(value)
 
         except Exception:
-            raise SchemaError('Invalid value {} for {}.'.format(value, self.base_type))
+            raise SchemaError('Invalid value {} for {}.'.format(value, self.class_type))
 
     def __repr__(self):  # pragma: no cover
         return '<{} instance at: 0x{:x}>'.format(self.__class__, id(self))
@@ -172,22 +176,53 @@ class MappingType(NodeType):
     >>> print(mapping_validator('{"b": 2}'))
     {'b': 2}
     """
-    base_type = dict
+    base_type = (dict, OrderedDict, )
 
     cast_callback = lambda _, value: ujson.loads(value)
 
-    def __init__(self, item_type=None):
-        self.item_type = item_type
+
+class InstanceType(NodeType):
+    """Class instance type.
+
+    >>> class MyClass(object):
+    ...     def __init__(self, a, b):
+    ...         self.a = a
+    ...         self.b = b
+    ...     def __repr__(self):
+    ...         return 'MyClass({})'.format(self.a)
+    ...     __str__ = __repr__
+    ...
+    >>> class_validator = InstanceType(cls_type=MyClass)
+    >>> class_validator_2 = InstanceType(cls_type=int)
+    >>> print(class_validator({'a': 1, 'b': 1}))
+    MyClass(1)
+    >>> print(class_validator(MyClass(a=2, b=2)))
+    MyClass(2)
+    >>> class_validator.class_type
+    <class 'schema_factory.MyClass'>
+    >>> class_validator_2.class_type
+    <class 'int'>
+    """
+
+    def cast_callback(self, value):
+        return self.class_type(**value) if isinstance(value, (dict, OrderedDict)) else self.class_type(value)
+
+    def __init__(self, cls_type=None):
+        self._class_type = cls_type
 
 
 class ArrayType(NodeType):
     """Array NodeType.
     """
 
+    base_type = list
+
     def __init__(self, item_type=None):
-        self.base_type = item_type
+        self.item_type = item_type
 
     def validate(self, value):
+        """Overriding `validate` method.
+        """
         pass
 
 
