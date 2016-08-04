@@ -28,4 +28,4 @@ __date__ = '2016-1-14'
 __version__ = '1.1'
 
 from schema_factory.schema_factory import *
-from schema_factory.node_types import *
+from schema_factory.types import *

@@ -13,7 +13,7 @@ __version__ = '1.2'
 from collections import OrderedDict
 import ujson
 import weakref
-from schema_factory.node_types import NodeTypeError
+from schema_factory.types import NodeTypeError
 
 
 version = list(map(int, __version__.split('.')))

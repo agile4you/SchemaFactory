@@ -31,6 +31,11 @@ Entity = schema_factory(
 )
 
 
+class PositiveInteger(SchemaNode):
+    field_type = Int
+    validators = [lambda x: x >= 0]
+
+
 entity = Entity(
     id='1232323',
     name='Greece, Cyclades, Mykonos',
@@ -44,3 +49,4 @@ entity = Entity(
 
 
 print(entity.to_dict)
+
