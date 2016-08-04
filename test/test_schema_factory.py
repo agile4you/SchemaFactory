@@ -3,7 +3,7 @@
 """
 
 import pytest
-from schema_factory import SchemaError, SchemaType
+from schema_factory import SchemaError, Schema
 from collections import OrderedDict
 
 
@@ -19,7 +19,7 @@ def test_schema_reflection(mock_schema):
     """Testing __isinstance__ hook.
     """
 
-    assert isinstance(mock_schema(), SchemaType)
+    assert isinstance(mock_schema(), Schema)
 
 
 def test_valid_schema_pass(mock_schema):

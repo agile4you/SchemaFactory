@@ -4,8 +4,6 @@
 Provides schema factory utilities.
 """
 
-from __future__ import absolute_import
-
 __all__ = ['SchemaNode', 'schema_factory', 'SchemaError', 'SchemaType']
 __authors__ = 'Papavassiliou Vassilis'
 __date__ = '2016-8-1'
@@ -14,9 +12,8 @@ __version__ = '1.2'
 
 from collections import OrderedDict
 import ujson
-from datetime import datetime
-import six
 import weakref
+from schema_factory.node_types import NodeTypeError
 
 
 version = list(map(int, __version__.split('.')))
@@ -38,194 +35,6 @@ class _SchemaType(type):
 SchemaType = _SchemaType('Schema', (), {})
 
 
-class NodeType(object):
-    """Base SchemaNode Type placeHolder.
-    """
-
-    base_type = None
-
-    cast_callback = None
-
-    @property
-    def class_type(self):
-        return self._class_type if hasattr(self, '_class_type') else self.base_type
-
-    @property
-    def cast(self):
-        """Cast a string interface into NodeType.base_type object.
-        """
-        if self.cast_callback:
-            return self.cast_callback
-        return self.class_type
-
-    def validate(self, value):
-        """Base validation method. Check if type is valid, or try brute casting.
-
-        Args:
-            value (object): A value for validation.
-
-        Returns:
-            Base_type instance.
-
-        Raises:
-            SchemaError, if validation or type casting fails.
-        """
-
-        cast_callback = self.cast
-
-        try:
-            return value if isinstance(value, self.class_type) else cast_callback(value)
-
-        except Exception:
-            raise SchemaError('Invalid value {} for {}.'.format(value, self.class_type))
-
-    def __repr__(self):  # pragma: no cover
-        return '<{} instance at: 0x{:x}>'.format(self.__class__, id(self))
-
-    def __str__(self): # pragma: no cover
-        return '{}(<{}>)'.format(self.__class__.__name__, self.base_type)
-
-    __call__ = validate
-
-
-class IntegerType(NodeType):
-    """Integer NodeType.
-
-    >>> int_validator = IntegerType()
-    >>> print(int_validator(34))
-    34
-    >>> print(int_validator('123'))
-    123
-    >>> print(int_validator('123c'))
-    Traceback (most recent call last):
-        ...
-    schema_factory.SchemaError: Invalid value 123c for <class 'int'>.
-    """
-
-    base_type = int
-
-
-class FloatType(NodeType):
-    """Float NodeType.
-
-    >>> float_validator = FloatType()
-    >>> print(float_validator(34))
-    34.0
-    >>> print(float_validator('123.009'))
-    123.009
-    >>> print(float_validator('123c'))
-    Traceback (most recent call last):
-        ...
-    schema_factory.SchemaError: Invalid value 123c for <class 'float'>.
-    """
-
-    base_type = float
-
-
-class StringType(NodeType):
-    """String NodeType.
-
-    >>> str_validator = StringType()
-    >>> print(str_validator(34))
-    34
-    >>> print(str_validator(False))
-    False
-    """
-
-    base_type = str
-
-
-class BooleanType(NodeType):
-    """Boolean NodeType.
-
-    >>> boolean_validator = BooleanType()
-    >>> boolean_validator(True)
-    True
-    >>> boolean_validator('FALSE')
-    False
-    >>> boolean_validator('TrUe')
-    True
-    """
-
-    base_type = bool
-
-    cast_callback = lambda _, value: ujson.loads(value.lower())
-
-
-class DatetimeType(NodeType):
-    """Datetime NodeType.
-
-    >>> datetime_validator = DatetimeType()
-    >>> print(datetime_validator('2016-01-28 15:30:26.979879+01'))
-    2016-01-28 15:30:26
-    >>> print(datetime_validator('2016-01-28 15:30:26.979879'))
-    2016-01-28 15:30:26
-    """
-
-    base_type = datetime
-
-    cast_callback = lambda _, value: datetime.strptime(value.split('.')[0], '%Y-%m-%d %H:%M:%S')
-
-
-class MappingType(NodeType):
-    """Mapping NodeType
-
-    >>> mapping_validator = MappingType()
-    >>> print(mapping_validator({'a': 1}))
-    {'a': 1}
-    >>> print(mapping_validator('{"b": 2}'))
-    {'b': 2}
-    """
-    base_type = (dict, OrderedDict, )
-
-    cast_callback = lambda _, value: ujson.loads(value)
-
-
-class InstanceType(NodeType):
-    """Class instance type.
-
-    >>> class MyClass(object):
-    ...     def __init__(self, a, b):
-    ...         self.a = a
-    ...         self.b = b
-    ...     def __repr__(self):
-    ...         return 'MyClass({})'.format(self.a)
-    ...     __str__ = __repr__
-    ...
-    >>> class_validator = InstanceType(cls_type=MyClass)
-    >>> class_validator_2 = InstanceType(cls_type=int)
-    >>> print(class_validator({'a': 1, 'b': 1}))
-    MyClass(1)
-    >>> print(class_validator(MyClass(a=2, b=2)))
-    MyClass(2)
-    >>> class_validator.class_type
-    <class 'schema_factory.MyClass'>
-    >>> class_validator_2.class_type
-    <class 'int'>
-    """
-
-    def cast_callback(self, value):
-        return self.class_type(**value) if isinstance(value, (dict, OrderedDict)) else self.class_type(value)
-
-    def __init__(self, cls_type=None):
-        self._class_type = cls_type
-
-
-class ArrayType(NodeType):
-    """Array NodeType.
-    """
-
-    base_type = list
-
-    def __init__(self, item_type=None):
-        self.item_type = item_type
-
-    def validate(self, value):
-        """Overriding `validate` method.
-        """
-        pass
-
-
 class SchemaNode(object):
     """Base Node descriptor class.
 
@@ -239,27 +48,14 @@ class SchemaNode(object):
         alias(str): The alias of the attribute at the attached class.
     """
 
-    _type_mapper = {
-        str: six.string_types,
-        int: six.integer_types,
-        dict: (dict, ),
-        float: (float, ),
-        bool: (bool, ),
-        list: (list, ),
-        None: None
-    }
-
-    array_types = {list, tuple}
-
-    def __init__(self, alias, valid_type, array_type=None, validators=None, default=None):
+    def __init__(self, alias, field_type, array=False, validators=None, default=None, required=True):
         self._cache = weakref.WeakKeyDictionary()
         self.validators = validators or []
-        self._valid_types = self._type_mapper.get(valid_type) or (valid_type, )
-        self._force_type = valid_type
-        self.is_array = set(self._valid_types).issubset(self.array_types)
-        self.array_type = self._type_mapper[array_type]
+        self.field_type = field_type
+        self.is_array = array
         self.alias = alias
         self.default = default
+        self.required = required
 
     def __get__(self, instance, owner):
         """Python descriptor protocol `__get__` magic method.
@@ -283,17 +79,39 @@ class SchemaNode(object):
             instance (object): The instance with descriptor attribute.
             value (object): The value for instance attribute.
         """
-        if not self.is_valid(value):
+
+        try:
+            cleaned_value = self.field_value(value)
+
+        except NodeTypeError as node_error:
+            raise AttributeError(node_error.args[0])
+
+        if not self.is_valid(cleaned_value):
             raise AttributeError(
-                'Invalid value {} for {}.'.format((value, ), self)
+                'Invalid value {} for {}.'.format((value,), self)
             )
 
-        self._cache[instance] = value
+        self._cache[instance] = cleaned_value
+
+    @staticmethod
+    def validator_exc(callback):
+        return callback.__doc__ if hasattr(callback, '__doc__') else callback.__name__
 
     def _valid(self, value):
         if self.validators:
-            return all([v(value) for v in self.validators])
+            for validator in self.validators:
+                if not validator(value):
+                    raise SchemaError('Invalid value {}: {}'.format(value, self.validator_exc(validator)))
+            # return all([v(value) for v in self.validators])
+            return True
         return True
+
+    def field_value(self, value):
+        """Validate against NodeType.
+        """
+        if not self.is_array:
+            return self.field_type(value)
+        return [self.field_type(item) for item in value]
 
     def is_valid(self, value):
         """Validate value before actual instance setting based on type.
@@ -304,27 +122,18 @@ class SchemaNode(object):
         Returns:
             True if value validation succeeds else False.
         """
-        if not self.array_type:
-            return isinstance(value, self._valid_types) and self._valid(value)
+        if not self.is_array:
+            return self._valid(value)
 
-        return all([isinstance(item, self.array_type) and self._valid(item)
-                    for item in value]) and\
-            isinstance(value, self._valid_types)
-
-    def brute_validate(self, value):
-        try:
-            return self._force_type(value)
-        except Exception:
-            raise AttributeError('Cannot cast {} to {}.'.format((value, ), self._force_type))
+        return all([self._valid(item) for item in value])
 
     def __repr__(self):  # pragma: no cover
         return "<{} instance at: 0x{:x}>".format(self.__class__, id(self))
 
     def __str__(self):
-        return "<{}(types: {}{})>".format(
+        return "<{}(types: {})>".format(
             self.__class__.__name__,
-            self._valid_types,
-            self.array_type or ''
+            self.field_type
         )
 
 
@@ -342,16 +151,17 @@ def schema_factory(schema_name, **schema_nodes):
         SchemaFactoryError, for bad SchemaNode instance initialization.
 
     Examples:
+        >>>
         >>> class MyType(object):
-        ...     def __init__(self, *args, **kwargs):
+        ...     def __init__(self, **kwargs):
         ...         self.data = kwargs
         ...     __repr__ = lambda self: "instance"
         ...
         >>> UserSchema = schema_factory(
         ...     schema_name='user',
-        ...     id=SchemaNode('id', valid_type=int, validators=[lambda x: x > 0]),
-        ...     name=SchemaNode('name', valid_type=str),
-        ...     model=SchemaNode('model', valid_type=MyType)
+        ...     id=SchemaNode('id', fields.Integer(), validators=[lambda x: x >=1], required=False),
+        ...     name=SchemaNode('id', fields.String(), validators=[lambda x: len(x) <= 10 ]),
+        ...     model=SchemaNode('model', fields.Instance(MyType))
         ... )
         ...
         >>> user = UserSchema(id=34, name='Bill', model=MyType())
@@ -362,23 +172,28 @@ def schema_factory(schema_name, **schema_nodes):
         >>> bad_user_attr_1 = UserSchema(id=-1, name='Bill', model=MyType())
         Traceback (most recent call last):
             ...
-        AttributeError: Invalid value (-1,) for <SchemaNode(types: (<class 'int'>,))>.
+        AttributeError: Invalid value (-1,) for <SchemaNode(types: IntegerType(<<class 'int'>>))>.
         >>> bad_user_attr_2 = UserSchema(pk=34, name='Bill', model=MyType())
         Traceback (most recent call last):
             ...
         schema_factory.SchemaError: Invalid Attributes UserSchema for {'pk'}.
-        >>> bad_user_val = UserSchema(id='34', name='Bill', model=MyType())
-        Traceback (most recent call last):
-            ...
-        AttributeError: Invalid value ('34',) for <SchemaNode(types: (<class 'int'>,))>.
+        >>> cast_user_val = UserSchema(id='34', name='Bill', model={'a': 1})
+        >>> print(cast_user_val.to_dict)
+        OrderedDict([('id', 34), ('model', instance), ('name', 'Bill')])
         >>> print(type(user))
         <class 'schema_factory.UserSchema'>
-        >>> user2 = UserSchema.brute_validate(id='43', name='Bill', model={'a': 1, 'b': 2})
-        >>> print(user2.to_dict)
-        OrderedDict([('id', 43), ('model', instance), ('name', 'Bill')])
+        >>> partial_user = UserSchema(name='Alison', model={'b': 1})
+        >>> print(partial_user.to_dict)
+        OrderedDict([('id', None), ('model', instance), ('name', 'Alison')])
     """
 
-    schema_nodes['_schema_nodes'] = sorted(schema_nodes.keys())
+    schema_dict = dict()
+    schema_dict.update(schema_nodes)
+
+    schema_dict['schema_nodes'] = sorted(schema_nodes.keys())
+
+    schema_dict['required'] = {node for node in schema_nodes.keys()
+                               if schema_nodes[node].required is True}
 
     def cls_repr(self):
         return "<{} instance at: 0x{:x}>".format(self.__class__, id(self))
@@ -386,37 +201,33 @@ def schema_factory(schema_name, **schema_nodes):
     def cls_str(self):
         return "<{} instance, attributes:{}>".format(
             self.__class__.__name__,
-            self._schema_nodes
+            self.schema_nodes
         )
 
-    def brute_validate(cls, **kwargs):
-        if not set(kwargs).issubset(set(cls._schema_nodes)):
-            raise SchemaError('Invalid Attributes {} for {}.'.format(
-                cls.__name__,
-                set(kwargs).difference(set(cls._schema_nodes))
+    def cls_init(self, **kwargs):
+
+        kwargs_set = set(kwargs)
+
+        if not self.required.issubset(kwargs_set):
+            raise SchemaError('Missing Required Attributes: {}'.format(
+                self.required.difference(kwargs_set)
             ))
 
-        cls_kwargs = {key: getattr(cls, key).brute_validate(value) for key, value in kwargs.items()}
-
-        return cls(**cls_kwargs)
-
-    def cls_init(self, **kwargs):
-        if not set(kwargs).issubset(set(self._schema_nodes)):
+        if not set(kwargs).issubset(set(self.schema_nodes)):
             raise SchemaError('Invalid Attributes {} for {}.'.format(
                 self.__class__.__name__,
-                set(kwargs).difference(set(self._schema_nodes))
+                set(kwargs).difference(set(self.required))
             ))
 
         for attr_name in kwargs:
             setattr(self, attr_name, kwargs[attr_name])
 
     def to_dict(self):
-        return OrderedDict([(k, getattr(self, k)) for k in self._schema_nodes])
+        return OrderedDict([(k, getattr(self, k)) for k in self.schema_nodes])
 
-    schema_nodes['to_dict'] = property(to_dict)
-    schema_nodes['__init__'] = cls_init
-    schema_nodes['__repr__'] = cls_repr
-    schema_nodes['__str__'] = cls_str
-    schema_nodes['brute_validate'] = classmethod(brute_validate)
+    schema_dict['to_dict'] = property(to_dict)
+    schema_dict['__init__'] = cls_init
+    schema_dict['__repr__'] = cls_repr
+    schema_dict['__str__'] = cls_str
 
-    return type('{}Schema'.format(schema_name.title()), (), schema_nodes)
+    return type('{}Schema'.format(schema_name.title()), (), schema_dict)
