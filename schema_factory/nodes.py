@@ -91,11 +91,21 @@ class BaseNode(object):
             cleaned_value = self.field_value(value)
 
         except NodeTypeError as node_error:
-            raise AttributeError(node_error.args[0])
+            raise AttributeError('{}.{}: {}'.format(
+                instance.__class__.__name__, self.alias, node_error.args[0])
+            )
 
-        if not self.is_valid(cleaned_value):
+        try:
+            self.is_valid(cleaned_value)
+
+        except AttributeError as error:
             raise AttributeError(
-                'Invalid value {} for {}.'.format((value,), self)
+                '{}.{} Error for {} value: {}'.format(
+                    instance.__class__.__name__,
+                    self.alias,
+                    value,
+                    error.args[0]
+                )
             )
 
         self._cache[instance] = cleaned_value
@@ -108,7 +118,7 @@ class BaseNode(object):
         if self.validators:
             for validator in self.validators:
                 if not validator(value):
-                    raise AttributeError('Invalid value {}: {}'.format(value, self.validator_exc(validator)))
+                    raise AttributeError(self.validator_exc(validator))
             # return all([v(value) for v in self.validators])
             return True
         return True

@@ -1,29 +1,5 @@
-from schema_factory import (schema_factory, SchemaError, IntegerNode, FloatNode, StringNode, SchemaNode,)
-import re
-from functools import wraps
-
-
-def validator(msg=''):
-    """Wraps a validator function for handling errors.
-    Args:
-        msg (str): The validator message.
-
-    Returns:
-        Function.
-    """
-
-    def _wrapped(func):
-        func.__msg__ = msg
-        return func
-
-    return _wrapped
-
-
-@validator('Malformed Email format.')
-def email_validator(email):
-    """Invalid email.
-    """
-    return re.match("^.+\\@(\\[?)[a-zA-Z0-9\\-\\.]+\\.([a-zA-Z]{2,3}|[0-9]{1,3})(\\]?)$", email)
+from schema_factory import (schema_factory, SchemaError, IntegerNode, FloatNode, StringNode, SchemaNode, MappingNode)
+import requests
 
 
 Point = schema_factory(
@@ -40,34 +16,71 @@ Bound = schema_factory(
 )
 
 
-@validator('Age must be between 18 and 30.')
-def age_validator(age):
-    """Age validator
-    """
-    return 18 <= age <= 30
+Image = schema_factory(
+    schema_name='Image',
+    uri=StringNode(),
+    layer=StringNode(validators=[lambda x: x in {'overview', 'detailed'}]),
+    destination_id=StringNode(),
+    image_id=StringNode()
+)
 
-Entity = schema_factory(
-    schema_name='Entity',
+Tag = schema_factory(
+    schema_name='Tag',
     id=IntegerNode(),
-    age=IntegerNode(validators=[age_validator]),
     name=StringNode(),
-    email=StringNode(validators=[email_validator]),
+    score=IntegerNode(),
+    tag_uri=StringNode(required=False, default='')
+)
+
+Weather = schema_factory(
+    schema_name='Weather',
+    humidity=StringNode(),
+    sunshine=StringNode(),
+    wind_speed=StringNode(),
+    temperature=StringNode(),
+    airport_ref=StringNode()
+)
+
+Places = schema_factory(
+    schema_name='Places',
+    beach=IntegerNode(required=False, default=0),
+    port=IntegerNode(required=False, default=0),
+    hotel=IntegerNode(required=False, default=0),
+    marina=IntegerNode(required=False, default=0),
+    residential=IntegerNode(required=False, default=0),
+    anchorage=IntegerNode(required=False, default=0)
+)
+
+Destination = schema_factory(
+    schema_name='Destination',
+    id=StringNode(),
+    type=StringNode(),
+    name=StringNode(),
+    slug=StringNode(),
+    breadcrumb=StringNode(array=True),
+    country_code=StringNode(),
+    description=StringNode(),
+    description_url=StringNode(required=False, default='www.tripinview.com'),
+    destination_rel=StringNode(array=True, required=False, default=[]),
+    point=SchemaNode(Point),
     bound=SchemaNode(Bound),
-    points=SchemaNode(Point, array=True, required=False, default=[])
-)
-
-entity = Entity(
-    id='1232323',
-    age='33',
-    name='Greece, Cyclades, Mykonos',
-    bound={
-        "northeast": {"lat": 40.232917785645, "lng": 26.817279815674},
-         "southwest": {"lat": 39.915752410889, "lng": 26.159860610962}
-    },
-    points=[{'lat': '1', 'lng': 0.08}, {'lat': '34.9898', 'lng': '0.9788347'}],
-    email='pav@gmail.com'
+    images=SchemaNode(Image, array=True),
+    tags=SchemaNode(Tag, array=True),
+    weather=SchemaNode(Weather),
+    image_count=IntegerNode(),
+    video_count=IntegerNode(),
+    places=SchemaNode(Places),
+    user_data=MappingNode(required=False, default={})
 )
 
 
-print(entity.to_dict)
+#  Validate remote object.
+
+
+destination_data = requests.get('https://api02.tripinview.com/resources/destination/50015').json().get('data')
+
+destination = Destination(**destination_data)
+
+
+print(destination.tags)
 

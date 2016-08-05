@@ -22,7 +22,7 @@ Provides schema factory utilities.
 
 
 __all__ = ['schema_factory', 'SchemaError', 'SchemaType', 'BaseNode', 'IntegerNode', 'FloatNode', 'StringNode',
-           'BooleanNode', 'TimestampNode', 'MappingNode', 'SchemaNode']
+           'BooleanNode', 'TimestampNode', 'MappingNode', 'SchemaNode', 'validator_message']
 
 __authors__ = 'Papavassiliou Vassilis'
 __date__ = '2016-1-14'
@@ -30,3 +30,19 @@ __version__ = '1.1'
 
 from schema_factory.schema import *
 from schema_factory.nodes import *
+
+
+def validator_message(msg=''):
+    """Wraps a validator function for handling errors.
+    Args:
+        msg (str): The validator message.
+
+    Returns:
+        Function.
+    """
+
+    def _wrapped(func):
+        func.__msg__ = msg
+        return func
+
+    return _wrapped
