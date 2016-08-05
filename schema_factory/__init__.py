@@ -21,11 +21,12 @@ Provides schema factory utilities.
 """
 
 
-__all__ = ['SchemaNode', 'schema_factory', 'SchemaError', 'SchemaType', 'NodeType', 'NodeTypeError', 'Integer', 'Float',
-           'String', 'Boolean', 'Mapping', 'Timestamp', 'Schema']
+__all__ = ['schema_factory', 'SchemaError', 'SchemaType', 'BaseNode', 'IntegerNode', 'FloatNode', 'StringNode',
+           'BooleanNode', 'TimestampNode', 'MappingNode', 'SchemaNode']
+
 __authors__ = 'Papavassiliou Vassilis'
 __date__ = '2016-1-14'
 __version__ = '1.1'
 
-from schema_factory.schema_factory import *
-from schema_factory.types import *
+from schema_factory.schema import *
+from schema_factory.nodes import *

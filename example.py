@@ -1,7 +1,25 @@
-from schema_factory import (schema_factory, SchemaNode, Float, Integer, Schema, String, SchemaError)
+from schema_factory import (schema_factory, SchemaError, IntegerNode, FloatNode, StringNode, SchemaNode,)
 import re
+from functools import wraps
 
 
+def validator(msg=''):
+    """Wraps a validator function for handling errors.
+    Args:
+        msg (str): The validator message.
+
+    Returns:
+        Function.
+    """
+
+    def _wrapped(func):
+        func.__msg__ = msg
+        return func
+
+    return _wrapped
+
+
+@validator('Malformed Email format.')
 def email_validator(email):
     """Invalid email.
     """
@@ -10,40 +28,43 @@ def email_validator(email):
 
 Point = schema_factory(
     schema_name='Point',
-    lat=SchemaNode('lat', Float()),
-    lng=SchemaNode('lng', Float())
+    lat=FloatNode(),
+    lng=FloatNode()
 )
+
 
 Bound = schema_factory(
     schema_name='Bound',
-    southwest=SchemaNode('southwest', Schema(Point)),
-    northeast=SchemaNode('northeast', Schema(Point))
+    southwest=SchemaNode(Point),
+    northeast=SchemaNode(Point)
 )
 
+
+@validator('Age must be between 18 and 30.')
+def age_validator(age):
+    """Age validator
+    """
+    return 18 <= age <= 30
 
 Entity = schema_factory(
     schema_name='Entity',
-    id=SchemaNode('id', Integer()),
-    name=SchemaNode('name', String()),
-    email=SchemaNode('name', String(), validators=[email_validator]),
-    bound=SchemaNode('bound', Schema(Bound)),
-    points=SchemaNode('points', Schema(Point), array=True, required=False, default=[])
+    id=IntegerNode(),
+    age=IntegerNode(validators=[age_validator]),
+    name=StringNode(),
+    email=StringNode(validators=[email_validator]),
+    bound=SchemaNode(Bound),
+    points=SchemaNode(Point, array=True, required=False, default=[])
 )
-
-
-class PositiveInteger(SchemaNode):
-    field_type = Int
-    validators = [lambda x: x >= 0]
-
 
 entity = Entity(
     id='1232323',
+    age='33',
     name='Greece, Cyclades, Mykonos',
     bound={
         "northeast": {"lat": 40.232917785645, "lng": 26.817279815674},
          "southwest": {"lat": 39.915752410889, "lng": 26.159860610962}
     },
-    points=[{'lat': 1, 'lng': 0.08}, {'lat': '34.9898', 'lng': '0.9788347'}],
+    points=[{'lat': '1', 'lng': 0.08}, {'lat': '34.9898', 'lng': '0.9788347'}],
     email='pav@gmail.com'
 )
 

@@ -13,10 +13,6 @@ from datetime import datetime
 from collections import OrderedDict
 
 
-def enum_factory(**kwargs):
-    return type('Enum', (), kwargs)
-
-
 class NodeTypeError(Exception):
     """Base module exception class.
     """
@@ -170,6 +166,11 @@ class Schema(NodeType):
     ...     def __init__(self, a, b):
     ...         self.a = a
     ...         self.b = b
+    ...
+    ...     @property
+    ...     def to_dict(self):
+    ...         return {'a': self.a, 'b': self.b}
+    ...
     ...     def __repr__(self):
     ...         return 'MyClass({})'.format(self.a)
     ...     __str__ = __repr__
@@ -177,11 +178,11 @@ class Schema(NodeType):
     >>> class_validator = Schema(cls_type=MyClass)
     >>> class_validator_2 = Schema(cls_type=int)
     >>> print(class_validator({'a': 1, 'b': 1}))
-    MyClass(1)
+    {'b': 1, 'a': 1}
     >>> print(class_validator(MyClass(a=2, b=2)))
     MyClass(2)
     >>> class_validator.cast_type
-    <class 'node_types.MyClass'>
+    <class 'types.MyClass'>
     >>> class_validator_2.cast_type
     <class 'int'>
     >>> class BadClass(object):
@@ -193,7 +194,7 @@ class Schema(NodeType):
     >>> print(class_validator_3('a'))
     Traceback (most recent call last):
         ...
-    node_types.NodeTypeError: Invalid value a for <class 'node_types.BadClass'>.
+    types.NodeTypeError: Invalid value a for <class 'types.BadClass'>.
     """
 
     def cast_callback(self, value):
