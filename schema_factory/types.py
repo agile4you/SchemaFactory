@@ -26,9 +26,9 @@ class NodeType(object):
     base_type = None
 
     cast_callback = None
-
-    def __init__(self, required=False):
-        self.required = required
+    #
+    # def __init__(self, required=False):
+    #     self.required = required
 
     @property
     def cast_type(self):
@@ -80,6 +80,8 @@ class Integer(NodeType):
     node_types.NodeTypeError: Invalid value 123c for <class 'int'>.
     """
 
+    __slots__ = ()
+
     base_type = int
 
 
@@ -97,6 +99,8 @@ class Float(NodeType):
     node_types.NodeTypeError: Invalid value 123c for <class 'float'>.
     """
 
+    __slots__ = ('_cast_type',)
+
     base_type = float
 
 
@@ -109,6 +113,8 @@ class String(NodeType):
     >>> print(str_validator(False))
     False
     """
+
+    __slots__ = ()
 
     base_type = str
 
@@ -124,6 +130,7 @@ class Boolean(NodeType):
     >>> boolean_validator('TrUe')
     True
     """
+    __slots__ = ('_cast_type',)
 
     base_type = bool
 
@@ -140,6 +147,8 @@ class Timestamp(NodeType):
     2016-01-28 15:30:26
     """
 
+    __slots__ = ('_cast_type',)
+
     base_type = datetime
 
     cast_callback = lambda _, value: datetime.strptime(value.split('.')[0], '%Y-%m-%d %H:%M:%S')
@@ -154,6 +163,8 @@ class Mapping(NodeType):
     >>> print(mapping_validator('{"b": 2}'))
     {'b': 2}
     """
+    __slots__ = ('_cast_type',)
+
     base_type = (dict, OrderedDict, )
 
     cast_callback = lambda _, value: ujson.loads(value)
@@ -197,6 +208,8 @@ class Schema(NodeType):
     types.NodeTypeError: Invalid value a for <class 'types.BadClass'>.
     """
 
+    __slots__ = ('_cast_type', )
+
     def cast_callback(self, value):
         try:
             return self.cast_type(**value).to_dict
@@ -204,6 +217,6 @@ class Schema(NodeType):
         except Exception as cast_error:
             raise NodeTypeError('Cannot cast {} to {}: {}'.format(value, self.cast_type, cast_error.args))
 
-    def __init__(self, cls_type=None, **kwargs):
+    def __init__(self, cls_type=None):
         self._cast_type = cls_type
-        super(Schema, self).__init__(**kwargs)
+        super(Schema, self).__init__()

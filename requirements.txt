@@ -4,3 +4,5 @@ pytest
 coverage
 coveralls
 pytest-cov
+voluptuous
+colander

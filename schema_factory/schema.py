@@ -135,5 +135,6 @@ def schema_factory(schema_name, **schema_nodes):
     schema_dict['__init__'] = cls_init
     schema_dict['__repr__'] = cls_repr
     schema_dict['__str__'] = cls_str
+    schema_dict['__slots__'] = ('__weakref__', )
 
     return SchemaType('{}Schema'.format(schema_name.title()), (), schema_dict)
