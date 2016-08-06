@@ -4,7 +4,20 @@
 
 
 import pytest
-from schema_factory import (SchemaNode, schema_factory)
+from schema_factory import (schema_factory, IntegerNode, StringNode, FloatNode)
+
+
+@pytest.fixture(scope='session')
+def mock_schema_min():
+    """Minimum Schema fixture.
+    """
+
+    test_schema = schema_factory(
+        schema_name='MinTest',
+        attr=StringNode()
+    )
+
+    return test_schema
 
 
 @pytest.fixture(scope='session')
@@ -13,9 +26,9 @@ def mock_schema():
     """
     test_schema = schema_factory(
         schema_name='test',
-        number=SchemaNode('number', valid_type=int, default=1),
-        name=SchemaNode('name', valid_type=str, default='this'),
-        scores=SchemaNode('scores', valid_type=list, array_type=float, default=[])
+        number=IntegerNode(required=False, default=0),
+        name=StringNode(),
+        scores=FloatNode(array=True)
     )
 
     return test_schema

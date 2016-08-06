@@ -69,10 +69,10 @@ def schema_factory(schema_name, **schema_nodes):
     schema_dict['required'] = {node for node in schema_nodes.keys()
                                if schema_nodes[node].required is True}
 
-    def cls_repr(self):
+    def cls_repr(self):  # pragma: no cover
         return "<{} instance at: 0x{:x}>".format(self.__class__, id(self))
 
-    def cls_str(self):
+    def cls_str(self):   # pragma: no cover
         return "<{} instance, attributes:{}>".format(
             self.__class__.__name__,
             self.schema_nodes

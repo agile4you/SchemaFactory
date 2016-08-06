@@ -144,7 +144,7 @@ class BaseNode(object):
     def __repr__(self):  # pragma: no cover
         return "<{} instance at: 0x{:x}>".format(self.__class__, id(self))
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "<{}(types: {})>".format(
             self.__class__.__name__,
             self.field_type
