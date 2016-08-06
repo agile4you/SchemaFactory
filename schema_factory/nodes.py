@@ -74,7 +74,7 @@ class BaseNode(object):
         if not instance and owner:  # pragma: no cover
             return self
 
-        return self._cache.get(instance) or self.default
+        return self._cache.get(instance) if self._cache.get(instance) is not None else self.default
 
     def __set__(self, instance, value):
         """Python descriptor protocol `__set__` magic method.
