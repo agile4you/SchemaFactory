@@ -1,3 +1,5 @@
+.. image:: assets/logo.png
+
 **SchemaFactory**:  *python schema made easy...*
 
 

@@ -23,9 +23,6 @@ class BaseNode(object):
 
     Attributes:
         _cache (object): A key/value instance that stores per instance values.
-        _valid_types(tuple): A tuple of valid attribute types.
-        is_array(bool): Indicates if valid types are containers.
-        array_type(object): The type if array items (if is_array is True)
         alias(str): The alias of the attribute at the attached class.
     """
 
