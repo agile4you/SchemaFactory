@@ -9,7 +9,7 @@ __all__ = ['BaseNode', 'IntegerNode', 'FloatNode', 'StringNode', 'BooleanNode', 
 
 __authors__ = 'Papavassiliou Vassilis'
 __date__ = '2016-8-1'
-__version__ = '1.2'
+__version__ = '1.6'
 
 
 import weakref

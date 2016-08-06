@@ -25,8 +25,8 @@ __all__ = ['schema_factory', 'SchemaError', 'SchemaType', 'BaseNode', 'IntegerNo
            'BooleanNode', 'TimestampNode', 'MappingNode', 'SchemaNode', 'validator_message']
 
 __authors__ = 'Papavassiliou Vassilis'
-__date__ = '2016-1-14'
-__version__ = '1.1'
+__date__ = '2016-8-6'
+__version__ = '1.6'
 
 from schema_factory.schema import *
 from schema_factory.nodes import *
