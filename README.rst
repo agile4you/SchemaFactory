@@ -25,9 +25,12 @@
         >>> point = PointSchema(lat=34, lng=29.01)
         >>> print(point.to_dict)
         OrderedDict([('lat', 34.0), ('lng', 29.01)])
+        >>>
         >>> point2 = PointSchema(lat='34', lng='0')
+        >>>
         >>> print(point2.to_dict)
         OrderedDict([('lat', 34.0), ('lng', 0.0)])
+        >>>
         >>> RegionSchema = schema_factory(
         ...     schema_name='Region',
         ...     name=StringNode(),
