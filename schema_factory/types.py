@@ -26,9 +26,6 @@ class NodeType(object):
     base_type = None
 
     cast_callback = None
-    #
-    # def __init__(self, required=False):
-    #     self.required = required
 
     @property
     def cast_type(self):

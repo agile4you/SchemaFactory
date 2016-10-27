@@ -4,7 +4,7 @@
 Provides schema factory utilities.
 """
 
-__all__ = ['schema_factory', 'SchemaError', 'SchemaType']
+__all__ = ['schema_factory', 'SchemaError', 'SchemaType', 'BaseSchema']
 __authors__ = 'Papavassiliou Vassilis'
 __date__ = '2016-8-1'
 __version__ = '1.2'
@@ -29,13 +29,69 @@ class SchemaType(type):
 
     def __new__(mcs, name, bases, attrs):
 
-        nodes_methods = {k: v for k, v in attrs.items() if
-                         isinstance(v, BaseNode)}
+        schema_nodes = {k: v for k, v in attrs.items() if
+                        isinstance(v, BaseNode)}
 
-        for node, attr in nodes_methods.items():
+        for node, attr in schema_nodes.items():
             attr.alias = node
 
+        attrs['schema_nodes'] = sorted(schema_nodes.keys())
+
+        attrs['required'] = {node for node in schema_nodes.keys()
+                             if schema_nodes[node].required is True}
+
+        # attrs['__slots__'] = ('__weakref__', )
+
         return super(SchemaType, mcs).__new__(mcs, name, bases, attrs)
+
+
+class BaseSchema(object, metaclass=SchemaType):
+    """Base Schema class.
+
+    Implements a base class for creating declarative schema.
+
+
+    Examples:
+
+        >>> from schema_factory import FloatNode
+        >>> class PointSchema(BaseSchema):
+        ...     lat=FloatNode()
+        ...     lng=FloatNode()
+        ...
+        >>> point = PointSchema(lat='34.0', lng=0)
+        >>> print(point.to_dict)
+        OrderedDict([('lat', 34.0), ('lng', 29.01)])
+    """
+    def __init__(self, **kwargs):
+
+        kwargs_set = set(kwargs)
+
+        if not self.required.issubset(kwargs_set):
+            raise SchemaError('Missing Required Attributes: {}'.format(
+                self.required.difference(kwargs_set)
+            ))
+
+        if not set(kwargs).issubset(set(self.schema_nodes)):
+            raise SchemaError('Invalid Attributes {} for {}.'.format(
+                self.__class__.__name__,
+                set(kwargs).difference(set(self.schema_nodes))
+            ))
+
+        for attr_name in kwargs:
+            setattr(self, attr_name, kwargs[attr_name])
+
+    def __repr__(self):  # pragma: no cover
+        return '<{} instance at: 0x{:x}>'.format(self.__class__, id(self))
+
+    def __str__(self):  # pragma: no cover
+        return "<{} instance, attributes:{}>".format(
+            self.__class__.__name__,
+            self.schema_nodes
+        )
+
+    @property
+    def to_dict(self):
+        return OrderedDict([(k, getattr(self, k)) for k in self.schema_nodes])
 
 
 def schema_factory(schema_name, **schema_nodes):
@@ -96,10 +152,10 @@ def schema_factory(schema_name, **schema_nodes):
     schema_dict = dict()
     schema_dict.update(schema_nodes)
 
-    schema_dict['schema_nodes'] = sorted(schema_nodes.keys())
-
-    schema_dict['required'] = {node for node in schema_nodes.keys()
-                               if schema_nodes[node].required is True}
+    # schema_dict['schema_nodes'] = sorted(schema_nodes.keys())
+    #
+    # schema_dict['required'] = {node for node in schema_nodes.keys()
+    #                            if schema_nodes[node].required is True}
 
     def cls_repr(self):  # pragma: no cover
         return "<{} instance at: 0x{:x}>".format(self.__class__, id(self))
@@ -135,6 +191,12 @@ def schema_factory(schema_name, **schema_nodes):
     schema_dict['__init__'] = cls_init
     schema_dict['__repr__'] = cls_repr
     schema_dict['__str__'] = cls_str
-    schema_dict['__slots__'] = ('__weakref__', )
+    # schema_dict['__slots__'] = ('__weakref__',)
 
     return SchemaType('{}Schema'.format(schema_name.title()), (), schema_dict)
+
+
+if __name__ == '__main__':
+
+    import doctest
+    doctest.testmod()

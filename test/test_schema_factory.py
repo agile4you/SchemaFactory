@@ -4,6 +4,7 @@
 
 import pytest
 from schema_factory.schema import SchemaError
+from collections import OrderedDict
 
 
 def test_schema_required_fail(mock_schema):
@@ -19,7 +20,8 @@ def test_schema_invalid_attr_fail(mock_schema):
     """
 
     with pytest.raises(SchemaError):
-        mock_schema(foo='foo', name='Bar', scores=[0.34])
+        mock_schema(foo='foo', name='Bar', scores
+        =[0.34])
 
 
 def test_schema_init_pass(mock_schema):
@@ -27,3 +29,12 @@ def test_schema_init_pass(mock_schema):
     """
 
     assert mock_schema(name='Bar', scores=[0.34])
+
+
+def test_base_schema_subclass(mock_base_schema_subclass):
+    """Testing BaseSchema subclass.
+    """
+
+    schema = mock_base_schema_subclass(lat='34', lng=0)
+
+    assert schema.to_dict == OrderedDict([('lat', 34.0), ('lng', 0.0)])

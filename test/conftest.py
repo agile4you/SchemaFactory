@@ -4,7 +4,7 @@
 
 
 import pytest
-from schema_factory import (schema_factory, IntegerNode, StringNode, FloatNode)
+from schema_factory import (schema_factory, BaseSchema, IntegerNode, StringNode, FloatNode)
 
 
 @pytest.fixture(scope='session')
@@ -32,6 +32,18 @@ def mock_schema():
     )
 
     return test_schema
+
+
+@pytest.fixture(scope='session')
+def mock_base_schema_subclass():
+    """BaseSchema subclass fixture.
+    """
+
+    class PointSchema(BaseSchema):
+        lat = FloatNode()
+        lng = FloatNode()
+
+    return PointSchema
 
 
 @pytest.fixture(scope='session')

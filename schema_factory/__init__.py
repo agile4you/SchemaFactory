@@ -22,11 +22,11 @@ Provides schema factory utilities.
 
 
 __all__ = ['schema_factory', 'SchemaError', 'SchemaType', 'BaseNode', 'IntegerNode', 'FloatNode', 'StringNode',
-           'BooleanNode', 'TimestampNode', 'MappingNode', 'SchemaNode', 'validator_message']
+           'BooleanNode', 'TimestampNode', 'MappingNode', 'SchemaNode', 'validator_message', 'BaseSchema']
 
 __authors__ = 'Papavassiliou Vassilis'
 __date__ = '2016-8-6'
-__version__ = '1.6'
+__version__ = '1.7'
 
 from schema_factory.schema import *
 from schema_factory.nodes import *
