@@ -11,12 +11,7 @@ __all__ = ('NodeType', 'NodeTypeError', 'Integer', 'Float', 'String', 'Boolean',
 import ujson
 from datetime import datetime
 from collections import OrderedDict
-
-
-class NodeTypeError(Exception):
-    """Base module exception class.
-    """
-    pass
+from schema_factory.errors import NodeTypeError
 
 
 class NodeType(object):

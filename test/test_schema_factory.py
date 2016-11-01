@@ -3,7 +3,7 @@
 """
 
 import pytest
-from schema_factory.schema import SchemaError
+from schema_factory.errors import SchemaError
 from collections import OrderedDict
 
 
@@ -20,8 +20,7 @@ def test_schema_invalid_attr_fail(mock_schema):
     """
 
     with pytest.raises(SchemaError):
-        mock_schema(foo='foo', name='Bar', scores
-        =[0.34])
+        mock_schema(foo='foo', name='Bar', scores=[0.34])
 
 
 def test_schema_init_pass(mock_schema):

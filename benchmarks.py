@@ -2,7 +2,7 @@
 """Benchmarks with famous validation libraries.
 """
 
-from schema_factory import schema_factory, IntegerNode, StringNode
+from schema_factory import BaseSchema, IntegerNode, StringNode
 from voluptuous import Schema, Required
 import colander
 import time
@@ -28,13 +28,11 @@ def bench_factory():
     """Benchmark for 1000 objects with 2 fields.
     """
 
-    schema_f = schema_factory(
-        schema_name='bench',
-        attr_1=StringNode(),
-        attr_2=IntegerNode()
-    )
+    class TestSchema(BaseSchema):
+        attr_1 = StringNode()
+        attr_2 = IntegerNode()
 
-    return [schema_f(**obj) for obj in object_loader()]
+    return [TestSchema(**obj) for obj in object_loader()]
 
 
 @timer

@@ -4,8 +4,8 @@
 
 from datetime import datetime
 import pytest
-from schema_factory.types import (NodeTypeError, Integer, Float, String, Boolean, Timestamp, Mapping,
-                                  Schema)
+from schema_factory.types import (Integer, Float, String, Boolean, Timestamp, Mapping, Schema)
+from schema_factory.errors import NodeTypeError
 
 
 def test_integer_type():

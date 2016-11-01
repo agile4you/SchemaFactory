@@ -5,6 +5,7 @@
 
 import pytest
 from schema_factory.nodes import BaseNode, Integer
+from schema_factory.errors import SchemaNodeError
 
 
 def test_base_node_node_validation():
@@ -21,11 +22,11 @@ def test_base_node_node_validation():
     instance.number = 10
     assert instance.number == 10
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(SchemaNodeError):
         instance.number = 'String'
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(SchemaNodeError):
         instance.number = -1
 
-    with pytest.raises(AttributeError):
+    with pytest.raises(SchemaNodeError):
         instance.number = 100

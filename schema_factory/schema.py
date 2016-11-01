@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""`schema_factory.factory` module.
+"""`schema_factory.schema` module.
 
 Provides schema factory utilities.
 """
@@ -11,16 +11,11 @@ __version__ = '1.2'
 
 
 from collections import OrderedDict
+from schema_factory.errors import (SchemaError, SchemaNodeError)
 from schema_factory.nodes import BaseNode
 
 
 version = list(map(int, __version__.split('.')))
-
-
-class SchemaError(Exception):
-    """Raises when a Schema error occurs.
-    """
-    pass
 
 
 class SchemaType(type):
@@ -60,7 +55,7 @@ class BaseSchema(object, metaclass=SchemaType):
         ...
         >>> point = PointSchema(lat='34.0', lng=0)
         >>> print(point.to_dict)
-        OrderedDict([('lat', 34.0), ('lng', 29.01)])
+        OrderedDict([('lat', 34.0), ('lng', 0.0)])
     """
     def __init__(self, **kwargs):
 
@@ -126,7 +121,7 @@ def schema_factory(schema_name, **schema_nodes):
         >>> RegionSchema = schema_factory(
         ...     schema_name='Region',
         ...     name=StringNode(),
-        ...     country_code=StringNode(validators=[lambda x: len(x) == 2]),
+        ...     country_code=StringNode( required=True, validators=[lambda x: len(x) == 2]),
         ...     location=SchemaNode(PointSchema, required=False, default=None),
         ...     keywords=StringNode(array=True, required=False, default=[])
         ... )
@@ -139,23 +134,17 @@ def schema_factory(schema_name, **schema_nodes):
         >>> region2 = RegionSchema(name='Athens')
         Traceback (most recent call last):
             ...
-        schema.SchemaError: Missing Required Attributes: {'country_code'}
+        schema_factory.errors.SchemaError: Missing Required Attributes: {'country_code'}
         >>> region3 = RegionSchema(name='Athens', country_code='gr', location={'lat': 32.7647, 'lng': 27.03},
         ...     foo='bar')
         Traceback (most recent call last):
             ...
-        schema.SchemaError: Invalid Attributes RegionSchema for {'foo'}.
+        schema_factory.errors.SchemaError: Invalid Attributes RegionSchema for {'foo'}.
         >>> region4 = RegionSchema(name='Athens', country_code='gr', keywords=['Acropolis', 'Mousaka', 434132])
-        >>> region4.to_dict
     """
 
     schema_dict = dict()
     schema_dict.update(schema_nodes)
-
-    # schema_dict['schema_nodes'] = sorted(schema_nodes.keys())
-    #
-    # schema_dict['required'] = {node for node in schema_nodes.keys()
-    #                            if schema_nodes[node].required is True}
 
     def cls_repr(self):  # pragma: no cover
         return "<{} instance at: 0x{:x}>".format(self.__class__, id(self))
@@ -191,7 +180,6 @@ def schema_factory(schema_name, **schema_nodes):
     schema_dict['__init__'] = cls_init
     schema_dict['__repr__'] = cls_repr
     schema_dict['__str__'] = cls_str
-    # schema_dict['__slots__'] = ('__weakref__',)
 
     return SchemaType('{}Schema'.format(schema_name.title()), (), schema_dict)
 

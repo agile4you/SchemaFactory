@@ -26,9 +26,9 @@ def mock_schema():
     """
     test_schema = schema_factory(
         schema_name='test',
-        number=IntegerNode(required=False, default=0),
-        name=StringNode(),
-        scores=FloatNode(array=True)
+        number=IntegerNode(default=0),
+        name=StringNode(required=True),
+        scores=FloatNode(required=True, array=True)
     )
 
     return test_schema

@@ -13,7 +13,8 @@ __version__ = '1.6'
 
 
 import weakref
-from schema_factory.types import (NodeTypeError, Integer, Float, String, Boolean, Timestamp, Schema, Mapping)
+from schema_factory.errors import NodeTypeError, SchemaNodeError, SchemaNodeValidatorError
+from schema_factory.types import (Integer, Float, String, Boolean, Timestamp, Schema, Mapping)
 
 
 class BaseNode(object):
@@ -32,7 +33,7 @@ class BaseNode(object):
     base_validators = []
     base_required = None
 
-    def __init__(self, field_type=None, alias=None, array=False, validators=None, default=None, required=True):
+    def __init__(self, field_type=None, alias=None, array=False, validators=None, default=None, required=False):
         self._cache = weakref.WeakKeyDictionary()
         self._validators = validators or []
         self._field_type = field_type
@@ -88,15 +89,15 @@ class BaseNode(object):
             cleaned_value = self.field_value(value)
 
         except NodeTypeError as node_error:
-            raise AttributeError('{}.{}: {}'.format(
+            raise SchemaNodeError('{}.{}: {}'.format(
                 instance.__class__.__name__, self.alias, node_error.args[0])
             )
 
         try:
             self.is_valid(cleaned_value)
 
-        except AttributeError as error:
-            raise AttributeError(
+        except SchemaNodeValidatorError as error:
+            raise SchemaNodeError(
                 '{}.{} Error for {} value: {}'.format(
                     instance.__class__.__name__,
                     self.alias,
@@ -115,8 +116,7 @@ class BaseNode(object):
         if self.validators:
             for validator in self.validators:
                 if not validator(value):
-                    raise AttributeError(self.validator_exc(validator))
-            # return all([v(value) for v in self.validators])
+                    raise SchemaNodeValidatorError(self.validator_exc(validator))
             return True
         return True
 
