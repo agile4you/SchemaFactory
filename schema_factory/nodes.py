@@ -106,6 +106,9 @@ class BaseNode(object):
                 )
             )
 
+        if self.alias and hasattr(instance, 'prepare_' + self.alias):
+            self._cache[instance] = getattr(instance, 'prepare_' + self.alias)(cleaned_value)
+
         self._cache[instance] = cleaned_value
 
     @staticmethod
