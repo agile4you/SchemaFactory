@@ -27,15 +27,20 @@ class SchemaType(type):
         schema_nodes = {k: v for k, v in attrs.items() if
                         isinstance(v, BaseNode)}
 
+        property_nodes = {k: v for k, v in attrs.items() if
+                          isinstance(v, property) and k != 'to_dict'}
+
         for node, attr in schema_nodes.items():
             attr.alias = node
 
         attrs['schema_nodes'] = sorted(schema_nodes.keys())
 
+        attrs['property_nodes'] = sorted(property_nodes.keys())
+
+        attrs['data_nodes'] = set(sorted(attrs['schema_nodes'] + attrs['property_nodes']))
+
         attrs['required'] = {node for node in schema_nodes.keys()
                              if schema_nodes[node].required is True}
-
-        # attrs['__slots__'] = ('__weakref__', )
 
         return super(SchemaType, mcs).__new__(mcs, name, bases, attrs)
 
@@ -87,6 +92,17 @@ class BaseSchema(object, metaclass=SchemaType):
     @property
     def to_dict(self):
         return OrderedDict([(k, getattr(self, k)) for k in self.schema_nodes])
+
+    def serialize(self, *fields):
+        """Serialize Nodes and attributes
+        """
+        if fields:
+            if not set(fields).issubset(self.data_nodes):
+                raise SchemaError('Invalid field for serialization: {}'.format(set(fields).difference(self.data_nodes)))
+
+            return OrderedDict([(k, getattr(self, k)) for k in fields])
+
+        return OrderedDict([(k, getattr(self, k)) for k in self.data_nodes])
 
 
 def schema_factory(schema_name, **schema_nodes):

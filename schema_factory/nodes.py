@@ -33,7 +33,7 @@ class BaseNode(object):
     base_validators = []
     base_required = None
 
-    def __init__(self, field_type=None, alias=None, array=False, validators=None, default=None, required=False):
+    def __init__(self, field_type=None, alias='', array=False, validators=None, default=None, required=False):
         self._cache = weakref.WeakKeyDictionary()
         self._validators = validators or []
         self._field_type = field_type
@@ -75,7 +75,12 @@ class BaseNode(object):
         if not instance and owner:  # pragma: no cover
             return self
 
-        return self._cache.get(instance) if self._cache.get(instance) is not None else self.default
+        value = self._cache.get(instance) if self._cache.get(instance) is not None else self.default
+
+        if hasattr(instance, 'prepare_' + self.alias):
+            return getattr(instance, 'prepare_' + self.alias)(value)
+
+        return value
 
     def __set__(self, instance, value):
         """Python descriptor protocol `__set__` magic method.

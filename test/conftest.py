@@ -43,6 +43,10 @@ def mock_base_schema_subclass():
         lat = FloatNode()
         lng = FloatNode()
 
+        @property
+        def srid(self):
+            return 4326
+
     return PointSchema
 
 

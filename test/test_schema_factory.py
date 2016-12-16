@@ -37,3 +37,10 @@ def test_base_schema_subclass(mock_base_schema_subclass):
     schema = mock_base_schema_subclass(lat='34', lng=0)
 
     assert schema.to_dict == OrderedDict([('lat', 34.0), ('lng', 0.0)])
+
+    assert schema.serialize('srid') == OrderedDict([('srid', 4326)])
+
+    assert dict(schema.serialize()) == dict(OrderedDict([('lng', 0.0), ('lat', 34.0), ('srid', 4326)]))
+
+    with pytest.raises(SchemaError):
+        schema.serialize('bar')
