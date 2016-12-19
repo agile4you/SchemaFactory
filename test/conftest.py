@@ -40,7 +40,7 @@ def mock_base_schema_subclass():
     """
 
     class PointSchema(BaseSchema):
-        lat = FloatNode()
+        lat = FloatNode(required=True)
         lng = FloatNode()
 
         @property

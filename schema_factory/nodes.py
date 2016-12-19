@@ -198,6 +198,6 @@ class SchemaNode(BaseNode):
     """Concrete SchemaNode.
     """
 
-    def __init__(self, schema, **kwargs):
+    def __init__(self, schema, **kwargs):   # pragma: no cover
         super(SchemaNode, self).__init__(**kwargs)
         self._field_type = Schema(schema)
