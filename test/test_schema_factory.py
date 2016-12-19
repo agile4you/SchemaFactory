@@ -34,6 +34,12 @@ def test_base_schema_subclass(mock_base_schema_subclass):
     """Testing BaseSchema subclass.
     """
 
+    with pytest.raises(SchemaError):
+        mock_base_schema_subclass(name='Foo')
+
+    with pytest.raises(SchemaError):
+        mock_base_schema_subclass(lng=23.90)
+
     schema = mock_base_schema_subclass(lat='34', lng=0)
 
     assert schema.to_dict == OrderedDict([('lat', 34.0), ('lng', 0.0)])

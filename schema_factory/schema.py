@@ -200,7 +200,7 @@ def schema_factory(schema_name, **schema_nodes):
     return SchemaType('{}Schema'.format(schema_name.title()), (), schema_dict)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':   # pragma: no cover
 
     import doctest
     doctest.testmod()

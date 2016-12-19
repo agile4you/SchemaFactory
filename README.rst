@@ -14,13 +14,11 @@
 
 .. code:: python
 
-        >>> from schema_factory import FloatNode, StringNode, SchemaNode
+        >>> from schema_factory import BaseSchema, FloatNode, StringNode, SchemaNode
         >>>
-        >>> PointSchema = schema_factory(
-        ...     schema_name='point',
-        ...     lat=FloatNode(),
-        ...     lng=FloatNode(),
-        ... )
+        >>> class PointSchema(BaseSchema):
+        ...     lat=FloatNode()
+        ...     lng=FloatNode()
         ...
         >>> point = PointSchema(lat=34, lng=29.01)
         >>> print(point.to_dict)
@@ -31,13 +29,11 @@
         >>> print(point2.to_dict)
         OrderedDict([('lat', 34.0), ('lng', 0.0)])
         >>>
-        >>> RegionSchema = schema_factory(
-        ...     schema_name='Region',
+        >>> class RegionSchema(BaseSchema):
         ...     name=StringNode(),
-        ...     country_code=StringNode(validators=[lambda x: len(x) == 2]),
-        ...     location=SchemaNode(PointSchema, required=False, default=None),
-        ...     keywords=StringNode(array=True, required=False, default=[])
-        ... )
+        ...     country_code=StringNode(required=True, validators=[lambda x: len(x) == 2]),
+        ...     location=SchemaNode(PointSchema, default=None),
+        ...     keywords=StringNode(array=True, default=[])
         ...
         >>> region = RegionSchema(name='Athens', country_code='gr', location={'lat': 32.7647, 'lng': 27.03})
         >>> print(region)

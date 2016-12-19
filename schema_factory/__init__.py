@@ -27,14 +27,14 @@ __all__ = ['schema_factory', 'SchemaType', 'BaseNode', 'IntegerNode', 'FloatNode
 
 __authors__ = 'Papavassiliou Vassilis'
 __date__ = '2016-8-6'
-__version__ = '1.7.3'
+__version__ = '1.7.4'
 
 from schema_factory.schema import *
 from schema_factory.nodes import *
 from schema_factory.errors import *
 
 
-def validator_message(msg=''):
+def validator_message(msg=''):  # pragma: no cover
     """Wraps a validator function for handling errors.
     Args:
         msg (str): The validator message.
