@@ -4,7 +4,7 @@
 Provides type check / casting functionality for schema_factory classes.
 """
 
-__all__ = ('NodeType', 'NodeTypeError', 'Integer', 'Float', 'String', 'Boolean', 'Mapping',
+__all__ = ('NodeType', 'Integer', 'Float', 'String', 'Boolean', 'Mapping',
            'Timestamp', 'Schema')
 
 
