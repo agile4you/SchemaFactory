@@ -143,7 +143,14 @@ class Timestamp(NodeType):
 
     base_type = datetime
 
-    cast_callback = lambda _, value: datetime.strptime(value.split('.')[0], '%Y-%m-%d %H:%M:%S')
+    # cast_callback = lambda _, value: datetime.strptime(value.split('.')[0], '%Y-%m-%d %H:%M:%S')
+
+    def cast_callback(self, value):
+        try:
+            return self.base_type.strptime(value.split('.')[0], '%Y-%m-%d %H:%M:%S')
+
+        except ValueError:  # pragma: no cover
+            return self.base_type.strptime(value.split('.')[0], '%Y-%m-%dT%H:%M:%S')
 
 
 class Mapping(NodeType):
