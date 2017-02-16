@@ -27,7 +27,7 @@ __all__ = ['schema_factory', 'SchemaType', 'BaseNode', 'IntegerNode', 'FloatNode
 
 __authors__ = 'Papavassiliou Vassilis'
 __date__ = '2016-8-6'
-__version__ = '1.7.5'
+__version__ = '1.7.7'
 
 from schema_factory.schema import *
 from schema_factory.nodes import *
