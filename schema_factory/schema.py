@@ -24,9 +24,6 @@ class SchemaType(type):
 
     def __new__(mcs, name, bases, attrs):
 
-        print(bases)
-        print(attrs.keys())
-
         schema_nodes = {k: v for k, v in attrs.items() if
                         isinstance(v, BaseNode)}
 
