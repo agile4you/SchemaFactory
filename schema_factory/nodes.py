@@ -103,7 +103,7 @@ class BaseNode(object):
 
         except SchemaNodeValidatorError as error:
             raise SchemaNodeError(
-                '{}.{} Error for {} value: {}'.format(
+                '{}.{} Error for value `{}` : {}'.format(
                     instance.__class__.__name__,
                     self.alias,
                     value,
@@ -130,7 +130,10 @@ class BaseNode(object):
         """
         if not self.is_array:
             return self.field_type(value)
-        return [self.field_type(item) for item in value]
+
+        if isinstance(value, (list, tuple, set)):
+            return [self.field_type(item) for item in value]
+        return self.field_type(value)
 
     def is_valid(self, value):
         """Validate value before actual instance setting based on type.
@@ -144,7 +147,10 @@ class BaseNode(object):
         if not self.is_array:
             return self._valid(value)
 
-        return all([self._valid(item) for item in value])
+        if isinstance(value, (list, set, tuple)):
+            return all([self._valid(item) for item in value])
+
+        return self._valid(value)
 
     def __repr__(self):  # pragma: no cover
         return "<{} instance at: 0x{:x}>".format(self.__class__, id(self))

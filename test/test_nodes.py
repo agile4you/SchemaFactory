@@ -13,11 +13,14 @@ def test_base_node_node_validation():
     """
 
     class Test(object):
-        number = BaseNode(field_type=Integer(), validators=[lambda x: x >= 0, lambda x: x < 50], default=40)
+        number = BaseNode(field_type=Integer(), array=True, validators=[lambda x: x >= 0, lambda x: x < 50], default=40)
 
         @staticmethod
         def prepare_number(value):
-            return value + 10
+            if not isinstance(value, (list, set, tuple)):
+                return value + 10
+
+            return [v + 10 for v in value]
 
     Test.number.alias = 'number'
 
@@ -27,6 +30,10 @@ def test_base_node_node_validation():
 
     instance.number = 10
     assert instance.number == 20
+
+    instance.number = [30, 31]
+
+    assert instance.number == [40, 41]
 
     with pytest.raises(SchemaNodeError):
         instance.number = 'String'

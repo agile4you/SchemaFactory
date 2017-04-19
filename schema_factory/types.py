@@ -8,10 +8,15 @@ __all__ = ('NodeType', 'Integer', 'Float', 'String', 'Boolean', 'Mapping',
            'Timestamp', 'Schema')
 
 
-import ujson
 from datetime import datetime
 from collections import OrderedDict
 from schema_factory.errors import NodeTypeError
+
+try:
+    import ujson
+
+except ImportError:
+    import json as ujson
 
 
 class NodeType(object):
@@ -47,7 +52,7 @@ class NodeType(object):
             return value if isinstance(value, self.cast_type) else cast_callback(value)
 
         except Exception:
-            raise NodeTypeError('Invalid value {} for {}.'.format(value, self.cast_type))
+            raise NodeTypeError('Invalid value `{}` for {}.'.format(value, self.cast_type))
 
     def __repr__(self):  # pragma: no cover
         return '<{} instance at: 0x{:x}>'.format(self.__class__, id(self))
@@ -137,13 +142,24 @@ class Timestamp(NodeType):
     2016-01-28 15:30:26
     >>> print(datetime_validator('2016-01-28 15:30:26.979879'))
     2016-01-28 15:30:26
+    >>> print(datetime_validator('2016-01-28T15:30:26.979879'))
+    2016-01-28 15:30:26
     """
 
     __slots__ = ('_cast_type',)
 
     base_type = datetime
 
-    cast_callback = lambda _, value: datetime.strptime(value.split('.')[0], '%Y-%m-%d %H:%M:%S')
+    @staticmethod
+    def cast_callback(value):
+        """Override `cast_callback` method.
+        """
+        # Postgresql / MySQL drivers change the format on 'TIMESTAMP' columns;
+
+        if 'T' in value:
+            value = value.replace('T', ' ')
+
+        return datetime.strptime(value.split('.')[0], '%Y-%m-%d %H:%M:%S')
 
 
 class Mapping(NodeType):
