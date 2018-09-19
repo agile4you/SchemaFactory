@@ -89,29 +89,32 @@ class BaseNode(object):
             instance (object): The instance with descriptor attribute.
             value (object): The value for instance attribute.
         """
+        if value is None and self.default:
+            self._cache[instance] = self.default
 
-        try:
-            cleaned_value = self.field_value(value)
+        else:
+            try:
+                cleaned_value = self.field_value(value)
 
-        except NodeTypeError as node_error:
-            raise SchemaNodeError('{}.{}: {}'.format(
-                instance.__class__.__name__, self.alias, node_error.args[0])
-            )
-
-        try:
-            self.is_valid(cleaned_value)
-
-        except SchemaNodeValidatorError as error:
-            raise SchemaNodeError(
-                '{}.{} Error for value `{}` : {}'.format(
-                    instance.__class__.__name__,
-                    self.alias,
-                    value,
-                    error.args[0]
+            except NodeTypeError as node_error:
+                raise SchemaNodeError('{}.{}: {}'.format(
+                    instance.__class__.__name__, self.alias, node_error.args[0])
                 )
-            )
 
-        self._cache[instance] = cleaned_value
+            try:
+                self.is_valid(cleaned_value)
+
+            except SchemaNodeValidatorError as error:
+                raise SchemaNodeError(
+                    '{}.{} Error for value `{}` : {}'.format(
+                        instance.__class__.__name__,
+                        self.alias,
+                        value,
+                        error.args[0]
+                    )
+                )
+
+            self._cache[instance] = cleaned_value
 
     @staticmethod
     def validator_exc(callback):

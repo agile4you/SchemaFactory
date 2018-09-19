@@ -5,6 +5,7 @@
 from schema_factory import BaseSchema, IntegerNode, StringNode
 from voluptuous import Schema, Required
 import colander
+import serpy
 import time
 
 
@@ -20,7 +21,7 @@ def timer(method):
 
 
 def object_loader():
-    return [{'attr_1': str(x), 'attr_2': x} for x in range(1, 100000)]
+    return [{'attr_1': str(x), 'attr_2': x} for x in range(1, 10000)]
 
 
 @timer
@@ -43,8 +44,6 @@ def bench_factory():
         @staticmethod
         def prepare_attr_2(value):
             return 'Attr#2{}'.format(value)
-
-    print(TestSchema(**{'attr_1': 'Hi', 'attr_2': 100}).serialize())
 
     return [TestSchema(**obj) for obj in object_loader()]
 
@@ -71,8 +70,25 @@ def bench_voluptuous():
 
     return [schema(obj) for obj in object_loader()]
 
+
+@timer
+def bench_serpy():
+    """Beanchmark for 1000 objects with 2 fields.
+    """
+
+    class FooSerializer(serpy.DictSerializer):
+        """The serializer schema definition."""
+        # Use a Field subclass like IntField if you need more validation.
+        attr_2 = serpy.IntField()
+        attr_1 = serpy.StrField()
+
+    return [FooSerializer(obj).data for obj in object_loader()]
+
+
 if __name__ == '__main__':
 
     bench_voluptuous()
     bench_factory()
     bench_colander()
+    bench_serpy()
+

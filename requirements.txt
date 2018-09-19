@@ -6,3 +6,4 @@ coveralls
 pytest-cov
 voluptuous
 colander
+serpy
